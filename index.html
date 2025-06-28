@@ -1,4 +1,59 @@
-<!DOCTYPE html>
+function calculateMultipleDesigns(rollWidth, designs, allowRotation) {
+            if (!designs || designs.length === 0) {
+                return null;
+            }
+            
+            let sections = [];
+            let totalLength = 0;
+            let totalUsedArea = 0;
+            let totalConsumedArea = 0;
+            
+            designs.forEach(design => {
+                // Calculate for normal orientation
+                const designsPerRowNormal = Math.floor(rollWidth / design.width);
+                const materialPerDesignNormal = designsPerRowNormal > 0 ? (rollWidth * design.height) / designsPerRowNormal : 999999;
+                
+                // Calculate for rotated orientation
+                const designsPerRowRotated = allowRotation ? Math.floor(rollWidth / design.height) : 0;
+                const materialPerDesignRotated = designsPerRowRotated > 0 ? (rollWidth * design.width) / designsPerRowRotated : 999999;
+                
+                // Choose best orientation
+                const bestOrientation = materialPerDesignNormal <= materialPerDesignRotated ? 'NORMAL' : 'ROTATED';
+                const optimalDesignsPerRow = bestOrientation === 'NORMAL' ? designsPerRowNormal : designsPerRowRotated;
+                const rowHeight = bestOrientation === 'NORMAL' ? design.height : design.width;
+                const designWidthInLayout = bestOrientation === 'NORMAL' ? design.width : design.height;
+                
+                const rowsNeeded = Math.ceil(design.quantity / optimalDesignsPerRow);
+                const sectionLength = rowsNeeded * rowHeight;
+                const sectionUsedArea = design.quantity * design.width * design.height;
+                const sectionConsumedArea = rollWidth * sectionLength;
+                
+                sections.push({
+                    design: design,
+                    bestOrientation: bestOrientation,
+                    designsPerRow: optimalDesignsPerRow,
+                    rowsNeeded: rowsNeeded,
+                    rowHeight: rowHeight,
+                    sectionLength: sectionLength,
+                    usedArea: sectionUsedArea,
+                    consumedArea: sectionConsumedArea,
+                    wastage: (sectionConsumedArea - sectionUsedArea) / sectionConsumedArea,
+                    totalDesigns: design.quantity,
+                    scaledDesignWidth: designWidthInLayout,
+                    scaledRowHeight: rowHeight
+                });
+                
+                totalLength += sectionLength;
+                totalUsedArea += sectionUsedArea;
+                totalConsumedArea += sectionConsumedArea;
+            });
+            
+            const overallWastage = (totalConsumedArea - totalUsedArea) / totalConsumedArea;
+            
+            return {
+                sections: sections,
+                totalLength: totalLength,
+                totalUs<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -236,7 +291,41 @@
             color: var(--text-gray);
         }
         
-        @media (max-width: 768px) {
+        .design-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 60px 60px 40px;
+            gap: 6px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-gray);
+            align-items: center;
+        }
+        
+        .design-row input, .design-row select {
+            font-size: 10px;
+            padding: 4px 6px;
+        }
+        
+        .remove-btn {
+            background: var(--accent-red);
+            color: var(--text-white);
+            border: none;
+            padding: 4px;
+            font-size: 8px;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .remove-btn:hover {
+            background: #990000;
+        }
+        
+        .design-summary {
+            font-size: 9px;
+            color: var(--text-gray);
+            margin-top: 4px;
+        }
             .container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto auto;
@@ -320,9 +409,29 @@
                 <button class="calculate-btn" onclick="calculate()">CALCULATE LAYOUT</button>
             </div>
             
-            <!-- Layout Results -->
+            <!-- Layout Results with Simple Visualizer -->
             <div class="panel">
-                <div class="panel-title">Layout Results</div>
+                <div class="panel-title">Layout Results & Preview</div>
+                
+                <!-- Simple Visualizer -->
+                <div style="margin-bottom: 16px; background: var(--input-bg); border: 1px solid var(--border-gray); padding: 12px;">
+                    <div style="font-size: 9px; color: var(--text-gray); margin-bottom: 8px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center;">
+                        <span>Quick Preview</span>
+                        <a href="#" onclick="openVisualizer()" style="background: var(--accent-blue); color: var(--bg-black); padding: 4px 8px; text-decoration: none; font-size: 9px; font-weight: bold;">DETAILED VIEW →</a>
+                    </div>
+                    <div id="visualizer" style="position: relative; background: var(--text-dark-gray); border: 1px solid var(--border-gray); min-height: 100px; overflow: auto;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-gray); font-size: 10px;">
+                            ENTER VALUES TO SEE LAYOUT
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);">
+                        <span>ROLL WIDTH</span>
+                        <span id="visualizerScale">SCALE: 1:10</span>
+                        <span>ROLL LENGTH</span>
+                    </div>
+                </div>
+                
+                <!-- Results -->
                 <div id="layoutResults">
                     <div class="result-row" onclick="copyToClipboard('bestOrientation')">
                         <span class="result-label">Best Orientation</span>
@@ -484,10 +593,96 @@
             this.classList.toggle('checked');
         });
         
+        let designCounter = 0;
+        let designs = [];
+        
+        function addDesignRow() {
+            designCounter++;
+            const designRows = document.getElementById('designRows');
+            
+            const row = document.createElement('div');
+            row.className = 'design-row';
+            row.id = `design-${designCounter}`;
+            
+            row.innerHTML = `
+                <div style="display: flex; gap: 4px;">
+                    <input type="number" class="input-field" placeholder="Width" step="0.1" value="16" style="flex: 1;" onchange="updateDesigns()">
+                    <select class="input-field" style="width: 50px;" onchange="updateDesigns()">
+                        <option value="inch">IN</option>
+                        <option value="ft">FT</option>
+                        <option value="cm">CM</option>
+                        <option value="mtr">M</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 4px;">
+                    <input type="number" class="input-field" placeholder="Height" step="0.1" value="20" style="flex: 1;" onchange="updateDesigns()">
+                    <select class="input-field" style="width: 50px;" onchange="updateDesigns()">
+                        <option value="inch">IN</option>
+                        <option value="ft">FT</option>
+                        <option value="cm">CM</option>
+                        <option value="mtr">M</option>
+                    </select>
+                </div>
+                <input type="number" class="input-field" placeholder="Qty" step="1" value="5" min="1" onchange="updateDesigns()">
+                <input type="text" class="input-field" placeholder="Label" value="Design ${designCounter}" onchange="updateDesigns()">
+                <button class="remove-btn" onclick="removeDesignRow('design-${designCounter}')" title="Remove">×</button>
+            `;
+            
+            designRows.appendChild(row);
+            updateDesigns();
+        }
+        
+        function removeDesignRow(id) {
+            const row = document.getElementById(id);
+            if (row) {
+                row.remove();
+                updateDesigns();
+            }
+        }
+        
+        function updateDesigns() {
+            designs = [];
+            const designRows = document.querySelectorAll('.design-row');
+            
+            designRows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input');
+                const selects = row.querySelectorAll('select');
+                
+                if (inputs.length >= 4 && selects.length >= 2) {
+                    const width = parseFloat(inputs[0].value) || 0;
+                    const widthUnit = selects[0].value;
+                    const height = parseFloat(inputs[1].value) || 0;
+                    const heightUnit = selects[1].value;
+                    const quantity = parseInt(inputs[2].value) || 0;
+                    const label = inputs[3].value || `Design ${index + 1}`;
+                    
+                    if (width > 0 && height > 0 && quantity > 0) {
+                        designs.push({
+                            width: convertToInches(width, widthUnit),
+                            height: convertToInches(height, heightUnit),
+                            quantity: quantity,
+                            label: label,
+                            originalWidth: width,
+                            originalHeight: height,
+                            widthUnit: widthUnit,
+                            heightUnit: heightUnit
+                        });
+                    }
+                }
+            });
+            
+            calculate();
+        }
+        
         // Auto-calculate on input change
         document.querySelectorAll('.input-field, select').forEach(input => {
             input.addEventListener('input', calculate);
             input.addEventListener('change', calculate);
+        });
+        
+        // Initialize with one design row
+        document.addEventListener('DOMContentLoaded', function() {
+            addDesignRow();
         });
         
         // Unit conversion functions
@@ -512,6 +707,95 @@
         
         function formatCurrency(amount) {
             return 'MVR ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        function updateVisualizer(rollWidth, layoutResult) {
+            const visualizer = document.getElementById('visualizer');
+            const scale = document.getElementById('visualizerScale');
+            
+            // Clear previous content
+            visualizer.innerHTML = '';
+            
+            if (!rollWidth || !layoutResult || layoutResult.sections.length === 0) {
+                visualizer.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-gray); font-size: 10px;">ENTER VALUES TO SEE LAYOUT</div>';
+                return;
+            }
+            
+            // Calculate scale to fit in small visualizer (280px wide max)
+            const maxWidth = 260;
+            const scaleRatio = maxWidth / rollWidth;
+            const scaledRollWidth = rollWidth * scaleRatio;
+            const scaledRollLength = layoutResult.totalLength * scaleRatio;
+            const maxHeight = Math.min(scaledRollLength, 80); // Small height for preview
+            
+            // If roll is too long, adjust scale
+            let finalScale = scaleRatio;
+            let finalRollWidth = scaledRollWidth;
+            let finalRollLength = scaledRollLength;
+            
+            if (scaledRollLength > 80) {
+                finalScale = 80 / layoutResult.totalLength;
+                finalRollWidth = rollWidth * finalScale;
+                finalRollLength = 80;
+            }
+            
+            // Set visualizer dimensions
+            visualizer.style.width = finalRollWidth + 'px';
+            visualizer.style.height = finalRollLength + 'px';
+            visualizer.style.position = 'relative';
+            visualizer.style.margin = '0 auto';
+            visualizer.style.background = '#2c2c2c';
+            
+            let currentY = 0;
+            
+            // Draw simplified sections
+            layoutResult.sections.forEach((section, sectionIndex) => {
+                const sectionColor = ['#00cc00', '#00aacc', '#cc9900'][sectionIndex % 3];
+                const sectionHeight = section.rowsNeeded * section.scaledRowHeight * finalScale;
+                
+                // Draw section as simple colored rectangle
+                const sectionRect = document.createElement('div');
+                sectionRect.style.position = 'absolute';
+                sectionRect.style.left = '0px';
+                sectionRect.style.top = currentY + 'px';
+                sectionRect.style.width = finalRollWidth + 'px';
+                sectionRect.style.height = sectionHeight + 'px';
+                sectionRect.style.background = sectionColor + '40';
+                sectionRect.style.border = '1px solid ' + sectionColor;
+                sectionRect.style.boxSizing = 'border-box';
+                
+                // Add section label if big enough
+                if (sectionHeight > 12) {
+                    const label = document.createElement('div');
+                    label.style.position = 'absolute';
+                    label.style.top = '2px';
+                    label.style.left = '2px';
+                    label.style.color = sectionColor;
+                    label.style.fontSize = '8px';
+                    label.style.fontWeight = 'bold';
+                    label.textContent = `${section.design.quantity}x`;
+                    sectionRect.appendChild(label);
+                }
+                
+                visualizer.appendChild(sectionRect);
+                currentY += sectionHeight;
+            });
+            
+            // Update scale indicator
+            const actualScale = Math.round(1 / finalScale);
+            scale.textContent = `SCALE: 1:${actualScale}`;
+            
+            // Add click hint
+            const hint = document.createElement('div');
+            hint.style.position = 'absolute';
+            hint.style.bottom = '2px';
+            hint.style.right = '2px';
+            hint.style.fontSize = '7px';
+            hint.style.color = 'var(--text-gray)';
+            hint.style.background = 'rgba(0, 0, 0, 0.7)';
+            hint.style.padding = '1px 3px';
+            hint.textContent = 'CLICK FOR DETAILS';
+            visualizer.appendChild(hint);
         }
         
         function calculate() {
@@ -580,6 +864,9 @@
             document.getElementById('totalSellingPrice').textContent = formatCurrency(totalSellingPrice);
             document.getElementById('totalProfit').textContent = formatCurrency(totalProfit);
             
+            // Update visualizer
+            updateVisualizer(rollWidth, designWidth, designHeight, quantity, bestOrientation, optimalDesignsPerRow, rowsNeeded, rollLength);
+            
             // Update last calculation time
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -610,6 +897,28 @@
             setTimeout(() => {
                 feedback.classList.remove('show');
             }, 1500);
+        }
+        
+        function openVisualizer() {
+            // For now, open in a new tab with a placeholder message
+            // In production, this would link to visualizer.html
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <html>
+                <head><title>Visualizer</title></head>
+                <body style="font-family: monospace; background: #000; color: #fff; padding: 20px;">
+                    <h2>🚧 DETAILED VISUALIZER</h2>
+                    <p>To set up the detailed visualizer:</p>
+                    <ol>
+                        <li>Save the "Canvas Print Layout Visualizer" artifact as <strong>visualizer.html</strong></li>
+                        <li>Upload both index.html and visualizer.html to your GitHub repository</li>
+                        <li>The link will work automatically once both files are deployed</li>
+                    </ol>
+                    <p>Current design data would be passed to the visualizer for full-scale layout preview.</p>
+                    <button onclick="window.close()" style="background: #cc0000; color: #fff; border: none; padding: 8px 16px; margin-top: 20px;">Close</button>
+                </body>
+                </html>
+            `);
         }
         
         // Initial calculation
