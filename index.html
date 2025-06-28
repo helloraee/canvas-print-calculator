@@ -4,475 +4,380 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canvas Print Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        border: "hsl(214.3 31.8% 91.4%)",
+                        input: "hsl(214.3 31.8% 91.4%)",
+                        ring: "hsl(222.2 84% 4.9%)",
+                        background: "hsl(0 0% 100%)",
+                        foreground: "hsl(222.2 84% 4.9%)",
+                        primary: {
+                            DEFAULT: "hsl(222.2 47.4% 11.2%)",
+                            foreground: "hsl(210 40% 98%)",
+                        },
+                        secondary: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(215.4 16.3% 46.9%)",
+                        },
+                        accent: {
+                            DEFAULT: "hsl(210 40% 96%)",
+                            foreground: "hsl(222.2 84% 4.9%)",
+                        },
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --bg-black: #000000;
-            --text-white: #ffffff;
-            --text-gray: #666666;
-            --text-dark-gray: #333333;
-            --accent-red: #cc0000;
-            --accent-green: #00cc00;
-            --accent-blue: #0099cc;
-            --border-gray: #222222;
-            --input-bg: #111111;
-            --hover-bg: #1a1a1a;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body {
-            font-family: 'Courier Prime', monospace;
-            background: var(--bg-black);
-            color: var(--text-white);
-            font-size: 12px;
-            line-height: 1.3;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
         }
         
-        .terminal {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        .animate-in {
+            animation: slideInFromTop 0.3s ease-out;
         }
         
-        .header {
-            background: var(--bg-black);
-            border-bottom: 1px solid var(--border-gray);
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-        }
-        
-        .header-left {
-            color: var(--text-white);
-            font-weight: bold;
-        }
-        
-        .header-right {
-            color: var(--text-gray);
-            display: flex;
-            gap: 16px;
-        }
-        
-        .status-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            background: var(--accent-green);
-            border-radius: 50%;
-            margin-right: 6px;
-        }
-        
-        .container {
-            flex: 1;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto;
-            gap: 20px;
-        }
-        
-        .panel {
-            background: var(--bg-black);
-            border: 1px solid var(--border-gray);
-            padding: 16px;
-            transition: border-color 0.2s ease;
-        }
-        
-        .panel:hover {
-            border-color: var(--text-dark-gray);
-        }
-        
-        .panel-title {
-            color: var(--text-white);
-            font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-gray);
-            padding-bottom: 4px;
-        }
-        
-        .input-group {
-            margin-bottom: 12px;
-        }
-        
-        .input-label {
-            display: block;
-            color: var(--text-gray);
-            font-size: 10px;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-        
-        .input-field {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--border-gray);
-            color: var(--text-white);
-            padding: 8px;
-            font-family: 'Courier Prime', monospace;
-            font-size: 11px;
-            transition: border-color 0.2s ease;
-        }
-        
-        .input-field:focus {
-            outline: none;
-            border-color: var(--accent-red);
-        }
-        
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .checkbox {
-            width: 16px;
-            height: 16px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-gray);
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .checkbox.checked::after {
-            content: '✓';
-            position: absolute;
-            top: -2px;
-            left: 2px;
-            color: var(--accent-green);
-            font-size: 12px;
-        }
-        
-        .calculate-btn {
-            width: 100%;
-            background: var(--accent-red);
-            color: var(--text-white);
-            border: none;
-            padding: 12px;
-            font-family: 'Courier Prime', monospace;
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            margin-top: 16px;
-        }
-        
-        .calculate-btn:hover {
-            background: #990000;
-        }
-        
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            padding: 4px 0;
-            border-bottom: 1px solid var(--border-gray);
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        
-        .result-row:hover {
-            background: var(--hover-bg);
-        }
-        
-        .result-label {
-            color: var(--text-gray);
-            font-size: 10px;
-            text-transform: uppercase;
-        }
-        
-        .result-value {
-            color: var(--text-white);
-            font-weight: bold;
-            font-size: 11px;
-        }
-        
-        .result-value.highlight {
-            color: var(--accent-green);
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .copy-feedback {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--accent-green);
-            color: var(--bg-black);
-            padding: 8px 16px;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 1000;
+            animation: slideInFromRight 0.3s ease-out;
         }
         
-        .copy-feedback.show {
-            opacity: 1;
-        }
-        
-        .footer {
-            background: var(--bg-black);
-            border-top: 1px solid var(--border-gray);
-            padding: 6px 16px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-            color: var(--text-gray);
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto auto;
-                padding: 10px;
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
             }
         }
     </style>
 </head>
-<body>
-    <div class="terminal">
-        <div class="header">
-            <div class="header-left">CANVAS PRINT CALCULATOR</div>
-            <div class="header-right">
-                <span><span class="status-dot"></span>ONLINE</span>
-                <span id="current-time">14:30 GMT</span>
-                <span id="current-date">27-JUN-2025</span>
-            </div>
-        </div>
-        
-        <div class="container">
-            <!-- Layout Optimizer -->
-            <div class="panel">
-                <div class="panel-title">Layout Optimizer</div>
-                
-                <div class="input-group">
-                    <label class="input-label">Roll Width</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="number" class="input-field" id="rollWidth" value="60" step="0.1" style="flex: 1;">
-                        <select class="input-field" id="rollWidthUnit" style="width: 80px;">
-                            <option value="inch">INCH</option>
-                            <option value="ft">FT</option>
-                            <option value="cm">CM</option>
-                            <option value="mtr">MTR</option>
-                        </select>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-slate-900">Canvas Print Calculator</h1>
                     </div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Design Width</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="number" class="input-field" id="designWidth" value="16" step="0.1" style="flex: 1;">
-                        <select class="input-field" id="designWidthUnit" style="width: 80px;">
-                            <option value="inch">INCH</option>
-                            <option value="ft">FT</option>
-                            <option value="cm">CM</option>
-                            <option value="mtr">MTR</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Design Height</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="number" class="input-field" id="designHeight" value="20" step="0.1" style="flex: 1;">
-                        <select class="input-field" id="designHeightUnit" style="width: 80px;">
-                            <option value="inch">INCH</option>
-                            <option value="ft">FT</option>
-                            <option value="cm">CM</option>
-                            <option value="mtr">MTR</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Quantity</label>
-                    <input type="number" class="input-field" id="quantity" value="25" step="1">
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Allow Rotation</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox checked" id="allowRotation"></div>
-                        <span style="color: var(--text-gray); font-size: 10px;">ENABLE ROTATION OPTIMIZATION</span>
-                    </div>
-                </div>
-                
-                <button class="calculate-btn" onclick="calculate()">CALCULATE LAYOUT</button>
-            </div>
-            
-            <!-- Layout Results with Preview -->
-            <div class="panel">
-                <div class="panel-title">Layout Results & Preview</div>
-                
-                <!-- Simple Visualizer -->
-                <div style="margin-bottom: 16px; background: var(--input-bg); border: 1px solid var(--border-gray); padding: 12px;">
-                    <div style="font-size: 9px; color: var(--text-gray); margin-bottom: 8px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center;">
-                        <span>Quick Preview</span>
-                        <a href="visualizer.html" style="background: var(--accent-blue); color: var(--bg-black); padding: 4px 8px; text-decoration: none; font-size: 9px; font-weight: bold;">DETAILED VIEW →</a>
-                    </div>
-                    <div id="visualizer" style="position: relative; background: var(--text-dark-gray); border: 1px solid var(--border-gray); min-height: 100px; overflow: auto;">
-                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-gray); font-size: 10px;">
-                            ENTER VALUES TO SEE LAYOUT
+                    <div class="hidden sm:block">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm text-slate-600">Online</span>
                         </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 9px; color: var(--text-gray);">
-                        <span>ROLL WIDTH</span>
-                        <span id="visualizerScale">SCALE: 1:10</span>
-                        <span>ROLL LENGTH</span>
-                    </div>
                 </div>
-                
-                <!-- Results -->
-                <div id="layoutResults">
-                    <div class="result-row" onclick="copyToClipboard('bestOrientation')">
-                        <span class="result-label">Best Orientation</span>
-                        <span class="result-value highlight" id="bestOrientation">-</span>
+                <div class="flex items-center space-x-4 text-sm text-slate-600">
+                    <span id="current-time">14:30 GMT</span>
+                    <span id="current-date">27-JUN-2025</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Layout Optimizer -->
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Layout Optimizer</h2>
+                    <p class="text-sm text-slate-600 mt-1">Configure your canvas printing parameters</p>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Roll Width -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Roll Width</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="rollWidth" value="60" step="0.1" 
+                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="rollWidthUnit" class="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="inch">INCH</option>
+                                <option value="ft">FT</option>
+                                <option value="cm">CM</option>
+                                <option value="mtr">MTR</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('designsPerRow')">
-                        <span class="result-label">Designs per Row</span>
-                        <span class="result-value" id="designsPerRow">-</span>
+
+                    <!-- Design Width -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Design Width</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="designWidth" value="16" step="0.1" 
+                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="designWidthUnit" class="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="inch">INCH</option>
+                                <option value="ft">FT</option>
+                                <option value="cm">CM</option>
+                                <option value="mtr">MTR</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('rowsNeeded')">
-                        <span class="result-label">Rows Needed</span>
-                        <span class="result-value" id="rowsNeeded">-</span>
+
+                    <!-- Design Height -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Design Height</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="designHeight" value="20" step="0.1" 
+                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="designHeightUnit" class="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="inch">INCH</option>
+                                <option value="ft">FT</option>
+                                <option value="cm">CM</option>
+                                <option value="mtr">MTR</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('rollLength')">
-                        <span class="result-label">Roll Length (in)</span>
-                        <span class="result-value" id="rollLength">-</span>
+
+                    <!-- Quantity -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Quantity</label>
+                        <input type="number" id="quantity" value="25" step="1" 
+                               class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('usedArea')">
-                        <span class="result-label">Used Area (sq in)</span>
-                        <span class="result-value" id="usedArea">-</span>
+
+                    <!-- Allow Rotation -->
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="allowRotation" checked 
+                               class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                        <label for="allowRotation" class="text-sm font-medium text-slate-700">Enable rotation optimization</label>
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('consumedArea')">
-                        <span class="result-label">Consumed Area (sq in)</span>
-                        <span class="result-value" id="consumedArea">-</span>
+
+                    <button onclick="calculate()" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">
+                        Calculate Layout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Layout Results -->
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Layout Results & Preview</h2>
+                    <p class="text-sm text-slate-600 mt-1">Click any result to copy to clipboard</p>
+                </div>
+                <div class="p-6">
+                    <!-- Visual Preview -->
+                    <div class="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-slate-700">Quick Preview</span>
+                            <a href="visualizer.html" 
+                               class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors duration-200 no-underline">
+                                Detailed View →
+                            </a>
+                        </div>
+                        <div id="visualizer" class="bg-slate-800 rounded border min-h-[100px] relative overflow-hidden">
+                            <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                                Enter values to see layout
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-xs text-slate-500">
+                            <span>Roll Width</span>
+                            <span id="visualizerScale">Scale: 1:10</span>
+                            <span>Roll Length</span>
+                        </div>
                     </div>
-                    <div class="result-row" onclick="copyToClipboard('wastagePercent')">
-                        <span class="result-label">Layout Wastage</span>
-                        <span class="result-value highlight" id="wastagePercent">-</span>
+
+                    <!-- Results Grid -->
+                    <div class="space-y-3" id="layoutResults">
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('bestOrientation')">
+                            <span class="text-sm font-medium text-slate-700">Best Orientation</span>
+                            <span class="text-sm font-semibold text-green-600" id="bestOrientation">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('designsPerRow')">
+                            <span class="text-sm font-medium text-slate-700">Designs per Row</span>
+                            <span class="text-sm font-semibold text-slate-900" id="designsPerRow">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('rowsNeeded')">
+                            <span class="text-sm font-medium text-slate-700">Rows Needed</span>
+                            <span class="text-sm font-semibold text-slate-900" id="rowsNeeded">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('rollLength')">
+                            <span class="text-sm font-medium text-slate-700">Roll Length (in)</span>
+                            <span class="text-sm font-semibold text-slate-900" id="rollLength">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('usedArea')">
+                            <span class="text-sm font-medium text-slate-700">Used Area (sq in)</span>
+                            <span class="text-sm font-semibold text-slate-900" id="usedArea">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('consumedArea')">
+                            <span class="text-sm font-medium text-slate-700">Consumed Area (sq in)</span>
+                            <span class="text-sm font-semibold text-slate-900" id="consumedArea">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('wastagePercent')">
+                            <span class="text-sm font-medium text-slate-700">Layout Wastage</span>
+                            <span class="text-sm font-semibold text-green-600" id="wastagePercent">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Cost Calculator -->
-            <div class="panel">
-                <div class="panel-title">Cost Calculator</div>
-                
-                <div class="input-group">
-                    <label class="input-label">Material Cost</label>
-                    <div style="display: flex; gap: 8px;">
-                        <span style="color: var(--text-gray); font-size: 11px; align-self: center;">MVR</span>
-                        <input type="number" class="input-field" id="materialCost" value="38.50" step="0.01" style="flex: 1;">
-                        <select class="input-field" id="materialCostUnit" style="width: 80px;">
-                            <option value="sqft">SQ FT</option>
-                            <option value="sqmtr">SQ MTR</option>
-                            <option value="sqin">SQ IN</option>
-                        </select>
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Cost Calculator</h2>
+                    <p class="text-sm text-slate-600 mt-1">Calculate printing costs and profit margins</p>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Material Cost -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Material Cost</label>
+                        <div class="flex space-x-2">
+                            <span class="px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-sm text-slate-600 flex items-center">MVR</span>
+                            <input type="number" id="materialCost" value="38.50" step="0.01" 
+                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="materialCostUnit" class="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="sqft">SQ FT</option>
+                                <option value="sqmtr">SQ MTR</option>
+                                <option value="sqin">SQ IN</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Ink Cost</label>
-                    <div style="display: flex; gap: 8px;">
-                        <span style="color: var(--text-gray); font-size: 11px; align-self: center;">MVR</span>
-                        <input type="number" class="input-field" id="inkCost" value="13.10" step="0.01" style="flex: 1;">
-                        <select class="input-field" id="inkCostUnit" style="width: 80px;">
-                            <option value="sqft">SQ FT</option>
-                            <option value="sqmtr">SQ MTR</option>
-                            <option value="sqin">SQ IN</option>
-                        </select>
+
+                    <!-- Ink Cost -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Ink Cost</label>
+                        <div class="flex space-x-2">
+                            <span class="px-3 py-2 bg-slate-100 border border-slate-300 rounded-md text-sm text-slate-600 flex items-center">MVR</span>
+                            <input type="number" id="inkCost" value="13.10" step="0.01" 
+                                   class="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <select id="inkCostUnit" class="px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="sqft">SQ FT</option>
+                                <option value="sqmtr">SQ MTR</option>
+                                <option value="sqin">SQ IN</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Setup/Labor Cost (MVR)</label>
-                    <input type="number" class="input-field" id="setupCost" value="693.75" step="0.01">
-                </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Additional Wastage (%)</label>
-                    <input type="number" class="input-field" id="additionalWastage" value="5" step="0.1" title="Safety margin for cutting errors, reprints, material defects">
-                    <div style="font-size: 9px; color: var(--text-gray); margin-top: 4px;">
-                        SAFETY MARGIN: CUTTING ERRORS, REPRINTS, DEFECTS
+
+                    <!-- Setup Cost -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Setup/Labor Cost (MVR)</label>
+                        <input type="number" id="setupCost" value="693.75" step="0.01" 
+                               class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
+
+                    <!-- Additional Wastage -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Additional Wastage (%)</label>
+                        <input type="number" id="additionalWastage" value="5" step="0.1" 
+                               class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <p class="text-xs text-slate-500">Safety margin for cutting errors, reprints, material defects</p>
+                    </div>
+
+                    <!-- Markup -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-700">Desired Markup (%)</label>
+                        <input type="number" id="markup" value="40" step="0.1" 
+                               class="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+
+                    <button onclick="calculate()" 
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200">
+                        Calculate Costs
+                    </button>
                 </div>
-                
-                <div class="input-group">
-                    <label class="input-label">Desired Markup (%)</label>
-                    <input type="number" class="input-field" id="markup" value="40" step="0.1">
-                </div>
-                
-                <button class="calculate-btn" onclick="calculate()">CALCULATE COSTS</button>
             </div>
-            
+
             <!-- Cost Results -->
-            <div class="panel">
-                <div class="panel-title">Cost Results</div>
-                <div id="costResults">
-                    <div class="result-row" onclick="copyToClipboard('totalWastage')">
-                        <span class="result-label">Total Wastage</span>
-                        <span class="result-value" id="totalWastage">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('materialArea')">
-                        <span class="result-label">Material Area (sq ft)</span>
-                        <span class="result-value" id="materialArea">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('totalMaterialCost')">
-                        <span class="result-label">Material Cost</span>
-                        <span class="result-value" id="totalMaterialCost">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('totalInkCost')">
-                        <span class="result-label">Ink Cost</span>
-                        <span class="result-value" id="totalInkCost">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('totalJobCost')">
-                        <span class="result-label">Total Job Cost</span>
-                        <span class="result-value highlight" id="totalJobCost">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('costPerUnit')">
-                        <span class="result-label">Cost per Unit</span>
-                        <span class="result-value" id="costPerUnit">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('sellingPrice')">
-                        <span class="result-label">Selling Price/Unit</span>
-                        <span class="result-value highlight" id="sellingPrice">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('totalSellingPrice')">
-                        <span class="result-label">Total Selling Price</span>
-                        <span class="result-value highlight" id="totalSellingPrice">-</span>
-                    </div>
-                    <div class="result-row" onclick="copyToClipboard('totalProfit')">
-                        <span class="result-label">Total Profit</span>
-                        <span class="result-value highlight" id="totalProfit">-</span>
+            <div class="bg-white rounded-lg border border-slate-200 shadow-sm">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Cost Results</h2>
+                    <p class="text-sm text-slate-600 mt-1">Final pricing and profit calculations</p>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-3" id="costResults">
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('totalWastage')">
+                            <span class="text-sm font-medium text-slate-700">Total Wastage</span>
+                            <span class="text-sm font-semibold text-slate-900" id="totalWastage">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('materialArea')">
+                            <span class="text-sm font-medium text-slate-700">Material Area (sq ft)</span>
+                            <span class="text-sm font-semibold text-slate-900" id="materialArea">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('totalMaterialCost')">
+                            <span class="text-sm font-medium text-slate-700">Material Cost</span>
+                            <span class="text-sm font-semibold text-slate-900" id="totalMaterialCost">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('totalInkCost')">
+                            <span class="text-sm font-medium text-slate-700">Ink Cost</span>
+                            <span class="text-sm font-semibold text-slate-900" id="totalInkCost">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors duration-150 border border-green-200" onclick="copyToClipboard('totalJobCost')">
+                            <span class="text-sm font-medium text-green-700">Total Job Cost</span>
+                            <span class="text-sm font-bold text-green-700" id="totalJobCost">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors duration-150" onclick="copyToClipboard('costPerUnit')">
+                            <span class="text-sm font-medium text-slate-700">Cost per Unit</span>
+                            <span class="text-sm font-semibold text-slate-900" id="costPerUnit">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors duration-150 border border-blue-200" onclick="copyToClipboard('sellingPrice')">
+                            <span class="text-sm font-medium text-blue-700">Selling Price/Unit</span>
+                            <span class="text-sm font-bold text-blue-700" id="sellingPrice">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors duration-150 border border-blue-200" onclick="copyToClipboard('totalSellingPrice')">
+                            <span class="text-sm font-medium text-blue-700">Total Selling Price</span>
+                            <span class="text-sm font-bold text-blue-700" id="totalSellingPrice">-</span>
+                        </div>
+                        <div class="result-row flex justify-between p-3 bg-emerald-50 rounded-lg cursor-pointer hover:bg-emerald-100 transition-colors duration-150 border border-emerald-200" onclick="copyToClipboard('totalProfit')">
+                            <span class="text-sm font-medium text-emerald-700">Total Profit</span>
+                            <span class="text-sm font-bold text-emerald-700" id="totalProfit">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="footer">
-            <div>CANVAS PRINT CALCULATOR v1.0</div>
-            <div>CLICK ANY RESULT TO COPY</div>
-            <div>LAST CALC: <span id="lastCalc">-</span></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center text-sm text-slate-600">
+                <div>Canvas Print Calculator v2.0</div>
+                <div>Click any result to copy</div>
+                <div>Last calc: <span id="lastCalc">-</span></div>
+            </div>
         </div>
+    </footer>
+
+    <!-- Copy Feedback Toast -->
+    <div id="copyFeedback" class="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transform translate-x-4 transition-all duration-300 copy-feedback">
+        Copied to clipboard!
     </div>
-    
-    <div class="copy-feedback" id="copyFeedback">COPIED TO CLIPBOARD</div>
-    
+
     <script>
+        // Hardcoded default values based on print order history - CHANGE THESE OVER TIME
+        const printOrderDefaults = {
+            materialCost: 38.50,    // MVR per sq ft - Update based on supplier pricing
+            inkCost: 13.10,         // MVR per sq ft - Update based on current ink costs  
+            setupCost: 693.75,      // MVR fixed cost - Adjust for labor/setup time changes
+            additionalWastage: 5,   // % safety margin - Modify based on experience
+            markup: 40              // % desired profit margin - Adjust based on market conditions
+        };
+
         // Update time and date
         function updateTime() {
             const now = new Date();
@@ -488,21 +393,19 @@
             const year = now.getUTCFullYear();
             dateElement.textContent = `${day}-${month}-${year}`;
         }
-        
-        setInterval(updateTime, 1000);
-        updateTime();
-        
-        // Checkbox handling
-        document.getElementById('allowRotation').addEventListener('click', function() {
-            this.classList.toggle('checked');
-        });
-        
+
         // Auto-calculate on input change
-        document.querySelectorAll('.input-field, select').forEach(input => {
-            input.addEventListener('input', calculate);
-            input.addEventListener('change', calculate);
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input, select').forEach(input => {
+                input.addEventListener('input', calculate);
+                input.addEventListener('change', calculate);
+            });
+            
+            setInterval(updateTime, 1000);
+            updateTime();
+            calculate(); // Initial calculation
         });
-        
+
         // Unit conversion functions
         function convertToInches(value, unit) {
             const conversions = {
@@ -513,7 +416,7 @@
             };
             return value * conversions[unit];
         }
-        
+
         function convertToSqFt(value, unit) {
             const conversions = {
                 'sqft': 1,
@@ -522,48 +425,45 @@
             };
             return value * conversions[unit];
         }
-        
+
         function formatCurrency(amount) {
             return 'MVR ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
-        
+
         function updateVisualizer(rollWidth, designWidth, designHeight, quantity, bestOrientation, optimalDesignsPerRow, rowsNeeded, rollLength) {
             const visualizer = document.getElementById('visualizer');
             const scale = document.getElementById('visualizerScale');
-            
+
             // Clear previous content
             visualizer.innerHTML = '';
-            
+
             if (!rollWidth || !designWidth || !designHeight || !quantity) {
-                visualizer.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--text-gray); font-size: 10px;">ENTER VALUES TO SEE LAYOUT</div>';
+                visualizer.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Enter values to see layout</div>';
                 return;
             }
-            
-            // Calculate scale to fit in small visualizer (280px wide max)
-            const maxWidth = 260;
+
+            // Calculate scale to fit in visualizer
+            const maxWidth = 400;
             const scaleRatio = maxWidth / rollWidth;
             const scaledRollWidth = rollWidth * scaleRatio;
             const scaledRollLength = rollLength * scaleRatio;
-            const maxHeight = Math.min(scaledRollLength, 80); // Small height for preview
-            
-            // If roll is too long, adjust scale
+            const maxHeight = Math.min(scaledRollLength, 100);
+
             let finalScale = scaleRatio;
             let finalRollWidth = scaledRollWidth;
             let finalRollLength = scaledRollLength;
-            
-            if (scaledRollLength > 80) {
-                finalScale = 80 / rollLength;
+
+            if (scaledRollLength > 100) {
+                finalScale = 100 / rollLength;
                 finalRollWidth = rollWidth * finalScale;
-                finalRollLength = 80;
+                finalRollLength = 100;
             }
-            
+
             // Set visualizer dimensions
             visualizer.style.width = finalRollWidth + 'px';
             visualizer.style.height = finalRollLength + 'px';
-            visualizer.style.position = 'relative';
-            visualizer.style.margin = '0 auto';
-            visualizer.style.background = '#2c2c2c';
-            
+            visualizer.className = 'bg-slate-800 rounded border relative overflow-hidden mx-auto';
+
             // Calculate design dimensions based on orientation
             let designWidthInLayout, designHeightInLayout;
             if (bestOrientation === 'ROTATED') {
@@ -573,58 +473,52 @@
                 designWidthInLayout = designWidth;
                 designHeightInLayout = designHeight;
             }
-            
-            // Scale design dimensions
+
             const scaledDesignWidth = designWidthInLayout * finalScale;
             const scaledDesignHeight = designHeightInLayout * finalScale;
-            
-            // Draw simplified designs
+
+            // Draw designs
             let placedDesigns = 0;
             for (let row = 0; row < rowsNeeded && placedDesigns < quantity; row++) {
                 const y = row * scaledDesignHeight;
-                
+
                 for (let col = 0; col < optimalDesignsPerRow && placedDesigns < quantity; col++) {
                     const x = col * scaledDesignWidth;
-                    
-                    // Create design rectangle
+
                     const designRect = document.createElement('div');
                     designRect.style.position = 'absolute';
                     designRect.style.left = x + 'px';
                     designRect.style.top = y + 'px';
                     designRect.style.width = scaledDesignWidth + 'px';
                     designRect.style.height = scaledDesignHeight + 'px';
-                    designRect.style.border = '1px solid var(--accent-green)';
-                    designRect.style.background = 'rgba(0, 204, 0, 0.1)';
-                    designRect.style.boxSizing = 'border-box';
-                    
+                    designRect.className = 'border border-green-400 bg-green-100 bg-opacity-20';
+
                     visualizer.appendChild(designRect);
                     placedDesigns++;
                 }
-                
+
                 // Show waste area in row
                 const wasteWidth = finalRollWidth - (optimalDesignsPerRow * scaledDesignWidth);
-                if (wasteWidth > 1) {
+                if (wasteWidth > 2) {
                     const wasteRect = document.createElement('div');
                     wasteRect.style.position = 'absolute';
                     wasteRect.style.left = (optimalDesignsPerRow * scaledDesignWidth) + 'px';
                     wasteRect.style.top = y + 'px';
                     wasteRect.style.width = wasteWidth + 'px';
                     wasteRect.style.height = scaledDesignHeight + 'px';
-                    wasteRect.style.background = 'rgba(204, 0, 0, 0.15)';
-                    wasteRect.style.border = '1px dashed var(--accent-red)';
-                    wasteRect.style.boxSizing = 'border-box';
+                    wasteRect.className = 'bg-red-200 bg-opacity-30 border border-red-400 border-dashed';
                     
                     visualizer.appendChild(wasteRect);
                 }
             }
-            
+
             // Update scale indicator
             const actualScale = Math.round(1 / finalScale);
-            scale.textContent = `SCALE: 1:${actualScale}`;
+            scale.textContent = `Scale: 1:${actualScale}`;
         }
-        
+
         function calculate() {
-            // Get input values and convert to standard units (inches for dimensions, sq ft for costs)
+            // Get input values and convert to standard units
             const rollWidth = convertToInches(parseFloat(document.getElementById('rollWidth').value) || 0, 
                                             document.getElementById('rollWidthUnit').value);
             const designWidth = convertToInches(parseFloat(document.getElementById('designWidth').value) || 0, 
@@ -632,8 +526,8 @@
             const designHeight = convertToInches(parseFloat(document.getElementById('designHeight').value) || 0, 
                                                 document.getElementById('designHeightUnit').value);
             const quantity = parseInt(document.getElementById('quantity').value) || 0;
-            const allowRotation = document.getElementById('allowRotation').classList.contains('checked');
-            
+            const allowRotation = document.getElementById('allowRotation').checked;
+
             const materialCostPerSqFt = convertToSqFt(parseFloat(document.getElementById('materialCost').value) || 0, 
                                                      document.getElementById('materialCostUnit').value);
             const inkCostPerSqFt = convertToSqFt(parseFloat(document.getElementById('inkCost').value) || 0, 
@@ -641,24 +535,24 @@
             const setupCost = parseFloat(document.getElementById('setupCost').value) || 0;
             const additionalWastage = parseFloat(document.getElementById('additionalWastage').value) / 100 || 0;
             const markup = parseFloat(document.getElementById('markup').value) / 100 || 0;
-            
+
             // Layout calculations
             const designsPerRowNormal = Math.floor(rollWidth / designWidth);
             const designsPerRowRotated = allowRotation ? Math.floor(rollWidth / designHeight) : 0;
-            
+
             const materialPerDesignNormal = designsPerRowNormal > 0 ? (rollWidth * designHeight) / designsPerRowNormal : 999999;
             const materialPerDesignRotated = designsPerRowRotated > 0 ? (rollWidth * designWidth) / designsPerRowRotated : 999999;
-            
+
             const bestOrientation = materialPerDesignNormal <= materialPerDesignRotated ? 'NORMAL' : 'ROTATED';
             const optimalDesignsPerRow = bestOrientation === 'NORMAL' ? designsPerRowNormal : designsPerRowRotated;
             const rowHeight = bestOrientation === 'NORMAL' ? designHeight : designWidth;
-            
+
             const rowsNeeded = Math.ceil(quantity / optimalDesignsPerRow);
             const rollLength = rowsNeeded * rowHeight;
             const usedArea = quantity * designWidth * designHeight;
             const consumedArea = rollWidth * rollLength;
             const layoutWastage = (consumedArea - usedArea) / consumedArea;
-            
+
             // Cost calculations
             const totalWastagePercent = layoutWastage + additionalWastage;
             const materialAreaSqFt = (usedArea / 144) * (1 + totalWastagePercent);
@@ -669,39 +563,51 @@
             const sellingPricePerUnit = costPerUnit * (1 + markup);
             const totalSellingPrice = sellingPricePerUnit * quantity;
             const totalProfit = totalSellingPrice - totalJobCost;
-            
-            // Update results
-            document.getElementById('bestOrientation').textContent = bestOrientation;
-            document.getElementById('designsPerRow').textContent = optimalDesignsPerRow;
-            document.getElementById('rowsNeeded').textContent = rowsNeeded;
-            document.getElementById('rollLength').textContent = rollLength.toFixed(1) + '"';
-            document.getElementById('usedArea').textContent = usedArea.toLocaleString();
-            document.getElementById('consumedArea').textContent = consumedArea.toLocaleString();
-            document.getElementById('wastagePercent').textContent = (layoutWastage * 100).toFixed(1) + '%';
-            
-            document.getElementById('totalWastage').textContent = (totalWastagePercent * 100).toFixed(1) + '%';
-            document.getElementById('materialArea').textContent = materialAreaSqFt.toFixed(2);
-            document.getElementById('totalMaterialCost').textContent = formatCurrency(totalMaterialCost);
-            document.getElementById('totalInkCost').textContent = formatCurrency(totalInkCost);
-            document.getElementById('totalJobCost').textContent = formatCurrency(totalJobCost);
-            document.getElementById('costPerUnit').textContent = formatCurrency(costPerUnit);
-            document.getElementById('sellingPrice').textContent = formatCurrency(sellingPricePerUnit);
-            document.getElementById('totalSellingPrice').textContent = formatCurrency(totalSellingPrice);
-            document.getElementById('totalProfit').textContent = formatCurrency(totalProfit);
-            
+
+            // Update results with animations
+            const elements = [
+                { id: 'bestOrientation', value: bestOrientation },
+                { id: 'designsPerRow', value: optimalDesignsPerRow },
+                { id: 'rowsNeeded', value: rowsNeeded },
+                { id: 'rollLength', value: rollLength.toFixed(1) + '"' },
+                { id: 'usedArea', value: usedArea.toLocaleString() },
+                { id: 'consumedArea', value: consumedArea.toLocaleString() },
+                { id: 'wastagePercent', value: (layoutWastage * 100).toFixed(1) + '%' },
+                { id: 'totalWastage', value: (totalWastagePercent * 100).toFixed(1) + '%' },
+                { id: 'materialArea', value: materialAreaSqFt.toFixed(2) },
+                { id: 'totalMaterialCost', value: formatCurrency(totalMaterialCost) },
+                { id: 'totalInkCost', value: formatCurrency(totalInkCost) },
+                { id: 'totalJobCost', value: formatCurrency(totalJobCost) },
+                { id: 'costPerUnit', value: formatCurrency(costPerUnit) },
+                { id: 'sellingPrice', value: formatCurrency(sellingPricePerUnit) },
+                { id: 'totalSellingPrice', value: formatCurrency(totalSellingPrice) },
+                { id: 'totalProfit', value: formatCurrency(totalProfit) }
+            ];
+
+            elements.forEach((element, index) => {
+                setTimeout(() => {
+                    const el = document.getElementById(element.id);
+                    el.textContent = element.value;
+                    el.closest('.result-row').classList.add('animate-in');
+                    setTimeout(() => {
+                        el.closest('.result-row').classList.remove('animate-in');
+                    }, 300);
+                }, index * 50);
+            });
+
             // Update visualizer
             updateVisualizer(rollWidth, designWidth, designHeight, quantity, bestOrientation, optimalDesignsPerRow, rowsNeeded, rollLength);
-            
+
             // Update last calculation time
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
             document.getElementById('lastCalc').textContent = timeStr;
         }
-        
+
         function copyToClipboard(elementId) {
             const element = document.getElementById(elementId);
             const text = element.textContent;
-            
+
             navigator.clipboard.writeText(text).then(function() {
                 showCopyFeedback();
             }).catch(function() {
@@ -715,17 +621,17 @@
                 showCopyFeedback();
             });
         }
-        
+
         function showCopyFeedback() {
             const feedback = document.getElementById('copyFeedback');
-            feedback.classList.add('show');
+            feedback.classList.remove('opacity-0', 'translate-x-4');
+            feedback.classList.add('opacity-100', 'translate-x-0');
+            
             setTimeout(() => {
-                feedback.classList.remove('show');
-            }, 1500);
+                feedback.classList.add('opacity-0', 'translate-x-4');
+                feedback.classList.remove('opacity-100', 'translate-x-0');
+            }, 2000);
         }
-        
-        // Initial calculation
-        calculate();
     </script>
 </body>
 </html>
