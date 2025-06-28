@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Print Calculator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-black: #000000;
+            --text-white: #ffffff;
+            --text-gray: #666666;
+            --text-dark-gray: #333333;
+            --accent-red: #cc0000;
+            --accent-green: #00cc00;
+            --border-gray: #222222;
+            --input-bg: #111111;
+            --hover-bg: #1a1a1a;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: var(--bg-black);
+            color: var(--text-white);
+            font-size: 12px;
+            line-height: 1.3;
+            min-height: 100vh;
+        }
+        
+        .terminal {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: var(--bg-black);
+            border-bottom: 1px solid var(--border-gray);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+        
+        .header-left {
+            color: var(--text-white);
+            font-weight: bold;
+        }
+        
+        .header-right {
+            color: var(--text-gray);
+            display: flex;
+            gap: 16px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: var(--bg-black);
+            border: 1px solid var(--border-gray);
+            padding: 16px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .panel:hover {
+            border-color: var(--text-dark-gray);
+        }
+        
+        .panel-title {
+            color: var(--text-white);
+            font-weight: bold;
+            font-size: 11px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-gray);
+            padding-bottom: 4px;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        .input-label {
+            display: block;
+            color: var(--text-gray);
+            font-size: 10px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+        
+        .input-field {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-gray);
+            color: var(--text-white);
+            padding: 8px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            transition: border-color 0.2s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-red);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-gray);
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: -2px;
+            left: 2px;
+            color: var(--accent-green);
+            font-size: 12px;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            background: var(--accent-red);
+            color: var(--text-white);
+            border: none;
+            padding: 12px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 16px;
+        }
+        
+        .calculate-btn:hover {
+            background: #990000;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border-gray);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        
+        .result-row:hover {
+            background: var(--hover-bg);
+        }
+        
+        .result-label {
+            color: var(--text-gray);
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+        
+        .result-value {
+            color: var(--text-white);
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        .result-value.highlight {
+            color: var(--accent-green);
+        }
+        
+        .copy-feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent-green);
+            color: var(--bg-black);
+            padding: 8px 16px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .copy-feedback.show {
+            opacity: 1;
+        }
+        
+        .results-grid {
+            display: none;
+        }
+        
+        .footer {
+            background: var(--bg-black);
+            border-top: 1px solid var(--border-gray);
+            padding: 6px 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-gray);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+                padding: 10px;
+            }
+        }
+        
+        .section-separator {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <div class="header-left">CANVAS PRINT CALCULATOR</div>
+            <div class="header-right">
+                <span><span class="status-dot"></span>ONLINE</span>
+                <span id="current-time">14:30 GMT</span>
+                <span id="current-date">27-JUN-2025</span>
+            </div>
+        </div>
+        
+        <div class="container">
+            <!-- Layout Optimizer Section -->
+            <div class="panel">
+                <div class="panel-title">Layout Optimizer</div>
+                
+                <div class="input-group">
+                    <label class="input-label">Roll Width</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" class="input-field" id="rollWidth" value="60" step="0.1" style="flex: 1;">
+                        <select class="input-field" id="rollWidthUnit" style="width: 80px;">
+                            <option value="inch">INCH</option>
+                            <option value="ft">FT</option>
+                            <option value="cm">CM</option>
+                            <option value="mtr">MTR</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Design Width</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" class="input-field" id="designWidth" value="16" step="0.1" style="flex: 1;">
+                        <select class="input-field" id="designWidthUnit" style="width: 80px;">
+                            <option value="inch">INCH</option>
+                            <option value="ft">FT</option>
+                            <option value="cm">CM</option>
+                            <option value="mtr">MTR</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Design Height</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="number" class="input-field" id="designHeight" value="20" step="0.1" style="flex: 1;">
+                        <select class="input-field" id="designHeightUnit" style="width: 80px;">
+                            <option value="inch">INCH</option>
+                            <option value="ft">FT</option>
+                            <option value="cm">CM</option>
+                            <option value="mtr">MTR</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Quantity</label>
+                    <input type="number" class="input-field" id="quantity" value="25" step="1">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Allow Rotation</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox checked" id="allowRotation"></div>
+                        <span style="color: var(--text-gray); font-size: 10px;">ENABLE ROTATION OPTIMIZATION</span>
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculate()">CALCULATE LAYOUT</button>
+            </div>
+            
+            <!-- Layout Results -->
+            <div class="panel">
+                <div class="panel-title">Layout Results</div>
+                <div id="layoutResults">
+                    <div class="result-row" onclick="copyToClipboard('bestOrientation')">
+                        <span class="result-label">Best Orientation</span>
+                        <span class="result-value highlight" id="bestOrientation">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('designsPerRow')">
+                        <span class="result-label">Designs per Row</span>
+                        <span class="result-value" id="designsPerRow">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('rowsNeeded')">
+                        <span class="result-label">Rows Needed</span>
+                        <span class="result-value" id="rowsNeeded">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('rollLength')">
+                        <span class="result-label">Roll Length (in)</span>
+                        <span class="result-value" id="rollLength">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('usedArea')">
+                        <span class="result-label">Used Area (sq in)</span>
+                        <span class="result-value" id="usedArea">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('consumedArea')">
+                        <span class="result-label">Consumed Area (sq in)</span>
+                        <span class="result-value" id="consumedArea">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('wastagePercent')">
+                        <span class="result-label">Layout Wastage</span>
+                        <span class="result-value highlight" id="wastagePercent">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Calculator -->
+            <div class="panel">
+                <div class="panel-title">Cost Calculator</div>
+                
+                <div class="input-group">
+                    <label class="input-label">Material Cost</label>
+                    <div style="display: flex; gap: 8px;">
+                        <span style="color: var(--text-gray); font-size: 11px; align-self: center;">MVR</span>
+                        <input type="number" class="input-field" id="materialCost" value="38.50" step="0.01" style="flex: 1;">
+                        <select class="input-field" id="materialCostUnit" style="width: 80px;">
+                            <option value="sqft">SQ FT</option>
+                            <option value="sqmtr">SQ MTR</option>
+                            <option value="sqin">SQ IN</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Ink Cost</label>
+                    <div style="display: flex; gap: 8px;">
+                        <span style="color: var(--text-gray); font-size: 11px; align-self: center;">MVR</span>
+                        <input type="number" class="input-field" id="inkCost" value="13.10" step="0.01" style="flex: 1;">
+                        <select class="input-field" id="inkCostUnit" style="width: 80px;">
+                            <option value="sqft">SQ FT</option>
+                            <option value="sqmtr">SQ MTR</option>
+                            <option value="sqin">SQ IN</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Setup/Labor Cost (MVR)</label>
+                    <input type="number" class="input-field" id="setupCost" value="693.75" step="0.01">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Additional Wastage (%)</label>
+                    <input type="number" class="input-field" id="additionalWastage" value="5" step="0.1" title="Safety margin for cutting errors, reprints, material defects">
+                    <div style="font-size: 9px; color: var(--text-gray); margin-top: 4px;">
+                        SAFETY MARGIN: CUTTING ERRORS, REPRINTS, DEFECTS
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Desired Markup (%)</label>
+                    <input type="number" class="input-field" id="markup" value="40" step="0.1">
+                </div>
+                
+                <button class="calculate-btn" onclick="calculate()">CALCULATE COSTS</button>
+            </div>
+            
+            <!-- Cost Results -->
+            <div class="panel">
+                <div class="panel-title">Cost Results</div>
+                <div id="costResults">
+                    <div class="result-row" onclick="copyToClipboard('totalWastage')">
+                        <span class="result-label">Total Wastage</span>
+                        <span class="result-value" id="totalWastage">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('materialArea')">
+                        <span class="result-label">Material Area (sq ft)</span>
+                        <span class="result-value" id="materialArea">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('totalMaterialCost')">
+                        <span class="result-label">Material Cost</span>
+                        <span class="result-value" id="totalMaterialCost">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('totalInkCost')">
+                        <span class="result-label">Ink Cost</span>
+                        <span class="result-value" id="totalInkCost">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('totalJobCost')">
+                        <span class="result-label">Total Job Cost</span>
+                        <span class="result-value highlight" id="totalJobCost">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('costPerUnit')">
+                        <span class="result-label">Cost per Unit</span>
+                        <span class="result-value" id="costPerUnit">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('sellingPrice')">
+                        <span class="result-label">Selling Price/Unit</span>
+                        <span class="result-value highlight" id="sellingPrice">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('totalSellingPrice')">
+                        <span class="result-label">Total Selling Price</span>
+                        <span class="result-value highlight" id="totalSellingPrice">-</span>
+                    </div>
+                    <div class="result-row" onclick="copyToClipboard('totalProfit')">
+                        <span class="result-label">Total Profit</span>
+                        <span class="result-value highlight" id="totalProfit">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>CANVAS PRINT CALCULATOR v1.0</div>
+            <div>CLICK ANY RESULT TO COPY</div>
+            <div>LAST CALC: <span id="lastCalc">-</span></div>
+        </div>
+    </div>
+    
+    <div class="copy-feedback" id="copyFeedback">COPIED TO CLIPBOARD</div>
+    
+    <script>
+        // Update time and date
+        function updateTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('current-time');
+            const dateElement = document.getElementById('current-date');
+            
+            const hours = String(now.getUTCHours()).padStart(2, '0');
+            const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+            timeElement.textContent = `${hours}:${minutes} GMT`;
+            
+            const day = String(now.getUTCDate()).padStart(2, '0');
+            const month = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()];
+            const year = now.getUTCFullYear();
+            dateElement.textContent = `${day}-${month}-${year}`;
+        }
+        
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // Checkbox handling
+        document.getElementById('allowRotation').addEventListener('click', function() {
+            this.classList.toggle('checked');
+        });
+        
+        // Auto-calculate on input change
+        document.querySelectorAll('.input-field, select').forEach(input => {
+            input.addEventListener('input', calculate);
+            input.addEventListener('change', calculate);
+        });
+        
+        // Unit conversion functions
+        function convertToInches(value, unit) {
+            const conversions = {
+                'inch': 1,
+                'ft': 12,
+                'cm': 0.393701,
+                'mtr': 39.3701
+            };
+            return value * conversions[unit];
+        }
+        
+        function convertToSqFt(value, unit) {
+            const conversions = {
+                'sqft': 1,
+                'sqmtr': 10.7639,
+                'sqin': 1/144
+            };
+            return value * conversions[unit];
+        }
+        
+        function formatCurrency(amount) {
+            return 'MVR ' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        function calculate() {
+            // Get input values and convert to standard units (inches for dimensions, sq ft for costs)
+            const rollWidth = convertToInches(parseFloat(document.getElementById('rollWidth').value) || 0, 
+                                            document.getElementById('rollWidthUnit').value);
+            const designWidth = convertToInches(parseFloat(document.getElementById('designWidth').value) || 0, 
+                                               document.getElementById('designWidthUnit').value);
+            const designHeight = convertToInches(parseFloat(document.getElementById('designHeight').value) || 0, 
+                                                document.getElementById('designHeightUnit').value);
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            const allowRotation = document.getElementById('allowRotation').classList.contains('checked');
+            
+            const materialCostPerSqFt = convertToSqFt(parseFloat(document.getElementById('materialCost').value) || 0, 
+                                                     document.getElementById('materialCostUnit').value);
+            const inkCostPerSqFt = convertToSqFt(parseFloat(document.getElementById('inkCost').value) || 0, 
+                                                document.getElementById('inkCostUnit').value);
+            const setupCost = parseFloat(document.getElementById('setupCost').value) || 0;
+            const additionalWastage = parseFloat(document.getElementById('additionalWastage').value) / 100 || 0;
+            const markup = parseFloat(document.getElementById('markup').value) / 100 || 0;
+            
+            // Layout calculations
+            const designsPerRowNormal = Math.floor(rollWidth / designWidth);
+            const designsPerRowRotated = allowRotation ? Math.floor(rollWidth / designHeight) : 0;
+            
+            const materialPerDesignNormal = designsPerRowNormal > 0 ? (rollWidth * designHeight) / designsPerRowNormal : 999999;
+            const materialPerDesignRotated = designsPerRowRotated > 0 ? (rollWidth * designWidth) / designsPerRowRotated : 999999;
+            
+            const bestOrientation = materialPerDesignNormal <= materialPerDesignRotated ? 'NORMAL' : 'ROTATED';
+            const optimalDesignsPerRow = bestOrientation === 'NORMAL' ? designsPerRowNormal : designsPerRowRotated;
+            const rowHeight = bestOrientation === 'NORMAL' ? designHeight : designWidth;
+            
+            const rowsNeeded = Math.ceil(quantity / optimalDesignsPerRow);
+            const rollLength = rowsNeeded * rowHeight;
+            const usedArea = quantity * designWidth * designHeight;
+            const consumedArea = rollWidth * rollLength;
+            const layoutWastage = (consumedArea - usedArea) / consumedArea;
+            
+            // Cost calculations
+            const totalWastagePercent = layoutWastage + additionalWastage;
+            const materialAreaSqFt = (usedArea / 144) * (1 + totalWastagePercent);
+            const totalMaterialCost = materialAreaSqFt * materialCostPerSqFt;
+            const totalInkCost = materialAreaSqFt * inkCostPerSqFt;
+            const totalJobCost = totalMaterialCost + totalInkCost + setupCost;
+            const costPerUnit = totalJobCost / quantity;
+            const sellingPricePerUnit = costPerUnit * (1 + markup);
+            const totalSellingPrice = sellingPricePerUnit * quantity;
+            const totalProfit = totalSellingPrice - totalJobCost;
+            
+            // Update results
+            document.getElementById('bestOrientation').textContent = bestOrientation;
+            document.getElementById('designsPerRow').textContent = optimalDesignsPerRow;
+            document.getElementById('rowsNeeded').textContent = rowsNeeded;
+            document.getElementById('rollLength').textContent = rollLength.toFixed(1) + '"';
+            document.getElementById('usedArea').textContent = usedArea.toLocaleString();
+            document.getElementById('consumedArea').textContent = consumedArea.toLocaleString();
+            document.getElementById('wastagePercent').textContent = (layoutWastage * 100).toFixed(1) + '%';
+            
+            document.getElementById('totalWastage').textContent = (totalWastagePercent * 100).toFixed(1) + '%';
+            document.getElementById('materialArea').textContent = materialAreaSqFt.toFixed(2);
+            document.getElementById('totalMaterialCost').textContent = formatCurrency(totalMaterialCost);
+            document.getElementById('totalInkCost').textContent = formatCurrency(totalInkCost);
+            document.getElementById('totalJobCost').textContent = formatCurrency(totalJobCost);
+            document.getElementById('costPerUnit').textContent = formatCurrency(costPerUnit);
+            document.getElementById('sellingPrice').textContent = formatCurrency(sellingPricePerUnit);
+            document.getElementById('totalSellingPrice').textContent = formatCurrency(totalSellingPrice);
+            document.getElementById('totalProfit').textContent = formatCurrency(totalProfit);
+            
+            // Update last calculation time
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            document.getElementById('lastCalc').textContent = timeStr;
+        }
+        
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                showCopyFeedback();
+            }).catch(function() {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback();
+            });
+        }
+        
+        function showCopyFeedback() {
+            const feedback = document.getElementById('copyFeedback');
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 1500);
+        }
+        
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
